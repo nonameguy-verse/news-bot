@@ -167,7 +167,8 @@ async def law(interaction: discord.Interaction):
         await interaction.response.defer()
         await post_news(interaction.channel, news)
 
-@app_commands.command(name="current")
+@bot.tree.command(name="current", description="Show a news article by ID")
+@app_commands.describe(news_id="ID of the news to display")
 async def current(interaction: discord.Interaction, news_id: str):
     # Pull latest news first
     os.system(f"cd {NEWS_REPO} && git pull")
@@ -175,13 +176,14 @@ async def current(interaction: discord.Interaction, news_id: str):
     path = os.path.join(NEWS_REPO, f"{news_id}.json")
     
     if not os.path.exists(path):
-        await interaction.response.send_message(f"News {news_id} not found.")
+        await interaction.response.send_message(f"News {news_id} not found.", ephemeral=True)
         return
     
     with open(path, "r") as f:
         news = json.load(f)
     
-    msg = f"**{news['title']}**\n{news['description']}\nBy {news['author']} at {news['date']}"
+    msg = f"**{news.get('headline', news.get('title', 'No title'))}**\n{news.get('summary', news.get('description', 'No description'))}\nBy {news.get('owner', news.get('author', 'Unknown'))} at {news.get('date', 'Unknown')}"
+    
     await interaction.response.send_message(msg)
 
 @bot.tree.command(name="createnews", description="Create a new news article (optionally with video/image)")
