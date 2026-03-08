@@ -167,16 +167,22 @@ async def law(interaction: discord.Interaction):
         await interaction.response.defer()
         await post_news(interaction.channel, news)
 
-@bot.tree.command(name="current", description="Get a specific news article by ID")
-@app_commands.describe(news_id="The ID of the news article")
+@app_commands.command(name="current")
 async def current(interaction: discord.Interaction, news_id: str):
-    news_list = load_news()
-    news_item = next((n for n in news_list if n["id"] == news_id), None)
-    if not news_item:
-        await interaction.response.send_message("News ID not found.")
-    else:
-        await interaction.response.defer()
-        await post_news(interaction.channel, news_item)
+    # Pull latest news first
+    os.system(f"cd {NEWS_REPO} && git pull")
+    
+    path = os.path.join(NEWS_REPO, f"{news_id}.json")
+    
+    if not os.path.exists(path):
+        await interaction.response.send_message(f"News {news_id} not found.")
+        return
+    
+    with open(path, "r") as f:
+        news = json.load(f)
+    
+    msg = f"**{news['title']}**\n{news['description']}\nBy {news['author']} at {news['date']}"
+    await interaction.response.send_message(msg)
 
 @bot.tree.command(name="createnews", description="Create a new news article (optionally with video/image)")
 @app_commands.describe(
