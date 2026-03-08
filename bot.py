@@ -92,6 +92,44 @@ async def post_news(channel, news):
 configured_channels = {}  # guild_id: channel_id
 
 # ===== SLASH COMMANDS =====
+@app_commands.command(name="publish", description="Create a news entry")
+@app_commands.check(is_admin)
+async def publish(interaction: discord.Interaction, title: str, description: str):
+
+    news_id = f"news-{random.randint(1000,9999)}"
+
+    news_data = {
+        "title": title,
+        "description": description,
+        "author": str(interaction.user),
+        "date": datetime.utcnow().isoformat()
+    }
+
+    path = f"{NEWS_REPO}/{news_id}.json"
+
+    with open(path, "w") as f:
+        json.dump(news_data, f, indent=4)
+
+    await interaction.response.send_message(f"News saved as {news_id}")
+
+@app_commands.command(name="syncnews", description="Push news repo to remote")
+@app_commands.check(is_admin)
+async def syncnews(interaction: discord.Interaction):
+
+    os.system(f"cd {NEWS_REPO} && git add .")
+    os.system(f"cd {NEWS_REPO} && git commit -m 'news update'")
+    os.system(f"cd {NEWS_REPO} && git push")
+
+    await interaction.response.send_message("News repo synced.")
+@app_commands.command(name="pullnews", description="Pull latest news repo")
+
+@app_commands.check(is_admin)
+async def pullnews(interaction: discord.Interaction):
+
+    os.system(f"cd {NEWS_REPO} && git pull")
+
+    await interaction.response.send_message("News repo updated.")
+
 @bot.tree.command(name="setup", description="Configure news channel or start daily news")
 @app_commands.describe(option="Choose 'channel' to set this channel, or 'daily' to start auto-posting")
 async def setup(interaction: discord.Interaction, option: str):
@@ -367,6 +405,9 @@ async def on_ready():
         print(f"Failed to sync commands: {e}")
     if not auto_news.is_running():
         auto_news.start()
+
+def is_admin(interaction: discord.Interaction):
+    return interaction.user.guild_permissions.administrator
 
 # ===== RUN BOT =====
 if __name__ == "__main__":
