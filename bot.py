@@ -72,6 +72,9 @@ def get_random_news(category=None):
     save_posted(posted_news)
     return chosen
 
+def is_admin(interaction: discord.Interaction):
+    return interaction.user.guild_permissions.administrator
+    
 async def post_news(channel, news):
     message = f"""
 📰 **Daily Emerald News**
@@ -406,8 +409,6 @@ async def on_ready():
     if not auto_news.is_running():
         auto_news.start()
 
-def is_admin(interaction: discord.Interaction):
-    return interaction.user.guild_permissions.administrator
 
 # ===== RUN BOT =====
 if __name__ == "__main__":
