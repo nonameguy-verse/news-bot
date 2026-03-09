@@ -11,7 +11,9 @@ from git import Repo
 
 # ===== CONFIG =====
 from dotenv import load_dotenv
-import os
+
+if not os.path.exists("news-storage"):
+    os.system("git clone https://YOUR_TOKEN@github.com/nonameguy-verse/news-storage.git")
 
 load_dotenv()
 
