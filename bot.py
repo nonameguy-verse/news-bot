@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
+from git import Repo
 
 # ===== CONFIG =====
 from dotenv import load_dotenv
@@ -170,19 +171,28 @@ async def law(interaction: discord.Interaction):
 @bot.tree.command(name="current", description="Show a news article by ID")
 @app_commands.describe(news_id="ID of the news to display")
 async def current(interaction: discord.Interaction, news_id: str):
-    # Pull latest news first
-    os.system(f"cd {NEWS_REPO} && git pull")
+    # Pull latest from the remote repo
+    try:
+        repo = Repo(NEWS_REPO)
+        origin = repo.remote(name='origin')
+        origin.pull()
+    except Exception as e:
+        print(f"Failed to pull news repo: {e}")
+
+    # Path to the news JSON
+    filepath = os.path.join(NEWS_REPO, f"{news_id}.json")
     
-    path = os.path.join(NEWS_REPO, f"{news_id}.json")
-    
-    if not os.path.exists(path):
+    if not os.path.exists(filepath):
         await interaction.response.send_message(f"News {news_id} not found.", ephemeral=True)
         return
     
-    with open(path, "r") as f:
+    # Load the news JSON
+    with open(filepath, "r") as f:
         news = json.load(f)
     
-    msg = f"**{news.get('headline', news.get('title', 'No title'))}**\n{news.get('summary', news.get('description', 'No description'))}\nBy {news.get('owner', news.get('author', 'Unknown'))} at {news.get('date', 'Unknown')}"
+    msg = f"**{news.get('headline', news.get('title', 'No title'))}**\n" \
+          f"{news.get('summary', news.get('description', 'No description'))}\n" \
+          f"By {news.get('owner', news.get('author', 'Unknown'))} at {news.get('date', 'Unknown')}"
     
     await interaction.response.send_message(msg)
 
