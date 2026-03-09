@@ -15,7 +15,7 @@ import os
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
-NEWS_REPO = "./news-repo"
+NEWS_REPO = "https://github.com/nonameguy-verse/news-storage"
 POSTED_DB = "./posted.json"
 
 # Ensure news folder exists
